@@ -32,7 +32,13 @@
       CardActions,
       Button,
       TextField,
-      InputAdornment
+      InputAdornment,
+      Alert,
+      AlertTitle,
+      Accordion,
+      AccordionSummary,
+      AccordionDetails,
+      Icon,
     } = MaterialUI;
 
     // Create a theme instance.
@@ -76,7 +82,7 @@
                 ? theme.palette.grey[200]
                 : theme.palette.grey[800],
             position: 'fixed',
-            bottom:0,
+            bottom: 0,
             width: '100vw',
           }}
         >
@@ -91,35 +97,91 @@
     }
 
     function App() {
+      const domain = JSON.parse(localStorage.getItem("domain"))
+      const vulnerabilities = JSON.parse(localStorage.getItem("vulnerabilities"))
+      console.log("Estou aqui", window.location)
+
+      if (!domain || !vulnerabilities) return window.open(window.location.origin, "_self")
+
       return (
         <Container component="main" maxWidth="sm">
           <Box sx={{
             marginTop: 8,
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
+            alignItems: 'start',
             gap: '0.8rem',
+            mb: 18,
           }}>
-            <img style={{ marginBottom: '2.4rem' }} src="./assets/image/logo.png" width="100%" alt="Logo CrawCIScan" />
-            <TextField
-              sx={{ width: "100%" }}
-              id="domain"
-              label="Digite seu domínio aqui..."
-              variant="outlined"
-              InputProps={{
-                startAdornment: <InputAdornment position="start">https://</InputAdornment>,
-              }}
-            />
-            <Box sx={{ width: "100%" }} style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem' }}>
-              <Button sx={{ width: '100%' }} variant="contained" color="primary">
-                Estou com sorte
-              </Button>
-              <Button sx={{ width: '100%' }} variant="outlined" color="primary">
-                Analisar domínio
-              </Button>
-            </Box>
-          </Box>
+            <Typography variant="body1">
+              <strong>Domínio</strong>
+            </Typography>
+            <Typography variant="h4">
+              {domain}
+            </Typography>
 
+            <Typography variant="body1">
+              <strong>Resultado</strong>
+            </Typography>
+
+            <Alert sx={{ width: '100%' }} severity="error">
+              <AlertTitle>Foram detectadas vulnerabilidades no seu site</AlertTitle>
+              Algumas das principais vulnerabilidades foram encontradas no seu site. Veja como corrigir abaixo
+            </Alert>
+
+            {
+              vulnerabilities.map((item, index) => (
+                <Accordion key={index} sx={{ width: '100%' }}>
+                  <AccordionSummary
+                    expandIcon={<Icon>expand_more</Icon>}
+                    aria-controls="panel1a-content"
+                    id="panel1a-header"
+                  >
+                    <Typography><b>Vulnerabilidade: {item.vulnerabilidade}</b></Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography variant="body1">
+                      Onde foi encontrado a vulnerabilidade
+                    </Typography>
+                    <Box sx={{
+                      my: 2,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: '0.8rem',
+                    }}>
+
+                      <Typography variant="body1">
+                        <strong>Url: </strong> {item.url}
+                      </Typography>
+                    </Box>
+
+                    <Typography sx={{ my: 2 }} variant="body1">
+                      <strong>Sobre a vulnerabilidade: </strong>
+                    </Typography>
+                    <Typography>
+                      {item.conteudo}
+                    </Typography>
+
+                    <Typography sx={{ my: 2 }} variant="body1">
+                      <strong>Recomendações: </strong>
+                    </Typography>
+                    <Typography>
+                      {item.recomendacao}
+                    </Typography>
+
+                    <Typography sx={{ my: 2 }} variant="body1">
+                      <strong>Referências: </strong>
+                    </Typography>
+                    <a href={item.referencias} target="_blank">
+                      {item.referencias}
+                    </a>
+                  </AccordionDetails>
+                </Accordion>
+              ))
+            }
+
+          </Box>
         </Container>
       );
     }

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>CrawCIScan | Analise vulnerabilidades no seu site</title>
+  <link rel="icon" type="image/png" href="./assets/image/favicon.png">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1, width=device-width" />
+  <script src="https://unpkg.com/react@latest/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/babel-standalone@latest/babel.min.js" crossorigin="anonymous"></script>
+
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <!-- Fonts to support Material Design -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+  <!-- Icons to support Material Design -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const {
+      colors,
+      CssBaseline,
+      ThemeProvider,
+      Typography,
+      Container,
+      createTheme,
+      Box,
+      SvgIcon,
+      Link,
+      CardActions,
+      Button,
+      TextField,
+      InputAdornment,
+      Alert,
+      AlertTitle,
+      Accordion,
+      AccordionSummary,
+      AccordionDetails,
+      Icon,
+      CircularProgress
+    } = MaterialUI;
+
+    // Create a theme instance.
+    const theme = createTheme({
+      palette: {
+        primary: {
+          main: '#556cd6',
+        },
+        secondary: {
+          main: '#19857b',
+        },
+        error: {
+          main: colors.red.A400,
+        },
+      },
+    });
+
+    function Copyright() {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          {'Copyright © '}
+          <Link color="inherit" href="https://CrawCIScan.com.br/">
+            CrawCIScan.com.br
+          </Link>{' '}
+          {new Date().getFullYear()}
+          {'.'}
+        </Typography>
+      );
+    }
+
+    function Footer() {
+      return (
+        <Box
+          component="footer"
+          sx={{
+            py: 3,
+            px: 2,
+            mt: 'auto',
+            backgroundColor: (theme) =>
+              theme.palette.mode === 'light'
+                ? theme.palette.grey[200]
+                : theme.palette.grey[800],
+            position: 'fixed',
+            bottom: 0,
+            width: '100vw',
+          }}
+        >
+          <Container maxWidth="sm">
+            <Typography variant="body1">
+              CrawCIScan | Analise vulnerabilidades no seu site
+            </Typography>
+            <Copyright />
+          </Container>
+        </Box>
+      )
+    }
+    const handleShowResults = () => {
+      return window.open(window.location.origin + "/resultado.html", "_self")
+    }
+
+    function App() {
+      const handleTestDomain = async (event) => {
+        event.preventDefault()
+
+        const submitter = event.nativeEvent.submitter.id
+        const domain = event.target[0].value
+
+        if (domain === "") return alert("O domínio não foi preenchido")
+
+        document.getElementById("button-group").style.display = "none"
+        document.getElementById("loader").style.display = "flex"
+        document.getElementById("domain").setAttribute("disabled", true)
+
+        try {
+          const response = await axios.post("http://127.0.0.1:5000", {
+            site: domain
+          })
+
+          if (response.data.length > 0) {
+            localStorage.setItem("vulnerabilities", JSON.stringify(response.data))
+            localStorage.setItem("domain", JSON.stringify(domain))
+
+            if (submitter === "lucky") {
+
+              document.getElementById("button-group").style.display = "flex"
+              document.getElementById("loader").style.display = "none"
+
+              document.getElementById("error-message").innerHTML = `
+              Infelizmente hoje não é seu dia de sorte. Encontramos ${response.data.length} vulnerabilidades no seu site.
+              <button type="button" class="view-button" onClick="handleShowResults();">Ver detalhes</button>
+              `
+              document.getElementById("error-message").style.display = "flex"
+            } else {
+              handleShowResults();
+            }
+          } else {
+            document.getElementById("button-group").style.display = "flex"
+            document.getElementById("loader").style.display = "none"
+
+            document.getElementById("success-message").innerHTML = `
+              Não foram encontradas vulnerabilidades no seu site
+              `
+            document.getElementById("success-message").style.display = "flex"
+          }
+        }
+        catch (err) {
+          document.getElementById("button-group").style.display = "flex"
+          document.getElementById("loader").style.display = "none"
+
+          document.getElementById("error-message").innerHTML = `
+              Houve um erro ao conectarmos com nossos servidores, tente novamente mais tarde
+              `
+          document.getElementById("error-message").style.display = "flex"
+        }
+      }
+
+      return (
+        <Container component="main" maxWidth="sm">
+          <Box
+            id="search-container"
+            sx={{
+              marginTop: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.8rem',
+            }}>
+            <form onSubmit={handleTestDomain}>
+              <img style={{ marginBottom: '2.4rem' }} src="./assets/image/logo.png" width="100%" alt="Logo CrawCIScan" />
+              <TextField
+                sx={{ width: "100%" }}
+                id="domain"
+                name="domain"
+                label="Digite seu domínio aqui..."
+                variant="outlined"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">🌐</InputAdornment>,
+                }}
+              />
+              <Box id="button-group" sx={{ width: "100%", mt: 4 }} style={{ display: 'flex', flexDirection: 'row', gap: '0.4rem' }}>
+                <Button type="submit" id="lucky" sx={{ width: '100%' }} variant="contained" color="primary">
+                  Estou com sorte
+                </Button>
+                <Button type="submit" id="analisis" sx={{ width: '100%' }} variant="outlined" color="primary">
+                  Analisar domínio
+                </Button>
+              </Box>
+              <Box id="loader" sx={{ width: "100%", mt: 4 }} style={{ display: 'none', flexDirection: 'column', alignItems: "center" }}>
+                <p>Carregando...</p>
+                <CircularProgress />
+              </Box>
+              <Alert id="error-message" sx={{ width: '100%', mt: 2 }} style={{ display: 'none' }} severity="error">
+
+              </Alert>
+              <Alert id="warning-message" sx={{ width: '100%', mt: 2 }} style={{ display: 'none' }} severity="warning">
+
+              </Alert>
+              <Alert id="success-message" sx={{ width: '100%', mt: 2 }} style={{ display: 'none' }} severity="success">
+
+              </Alert>
+            </form>
+          </Box>
+
+        </Container>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+      <ThemeProvider theme={theme}>
+        {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+        <CssBaseline />
+        <App />
+        <Footer />
+      </ThemeProvider>,
+    );
+  </script>
+</body>
+
+</html>
